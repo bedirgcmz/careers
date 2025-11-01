@@ -1,159 +1,84 @@
-// Audio service - TrackPlayer setup and configuration
-import TrackPlayer, { Capability, AppKilledPlaybackBehavior } from 'react-native-track-player';
+import { Platform } from "react-native";
+import TrackPlayer, { Capability, AppKilledPlaybackBehavior } from "react-native-track-player";
 
-// TrackPlayer service setup - call this in your App.tsx or _layout.tsx
-export const setupTrackPlayer = async (): Promise<void> => {
+let initialized = false;
+
+/** Player'ı 1 kez kur (idempotent) */
+export async function setupTrackPlayer() {
+  if (initialized) return;
+
+  // Sade ve güvenilir kurulum
+  await TrackPlayer.setupPlayer(
+    Platform.OS === "android"
+      ? { playBuffer: 1, minBuffer: 1 } // Android'de ek buffer ayarları zararsız
+      : undefined
+  );
+
+  await TrackPlayer.updateOptions({
+    // iOS + Android ortak
+    capabilities: [
+      Capability.Play,
+      Capability.Pause,
+      Capability.SeekTo,
+      Capability.SkipToNext,
+      Capability.SkipToPrevious,
+      Capability.Stop,
+    ],
+    compactCapabilities: [Capability.Play, Capability.Pause, Capability.SeekTo],
+    // İstersen atlama aralıkları (opsiyonel)
+    // forwardJumpInterval: 10,
+    // backwardJumpInterval: 10,
+
+    // RNTP v4'te iOS sesi kategorisi burada verilmez.
+    // Onu app.json config plugin’i hallediyor.
+
+    // Android’e özel
+    android: {
+      appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
+      // notificationIcon: 'mipmap/ic_launcher', // istersen
+    },
+
+    // Olay gönderim aralığı (desteklenir)
+    progressUpdateEventInterval: 1,
+  });
+
+  initialized = true;
+}
+
+/** Setup garanti: çağrıldığı yerde kurulum yoksa kur */
+export async function ensureSetup() {
+  if (initialized) return;
   try {
-    // Check if player is already initialized
-    const isSetup = await TrackPlayer.isServiceRunning();
-    if (isSetup) {
-      return;
-    }
-
-    // Setup the player with proper configuration
-    await TrackPlayer.setupPlayer({
-      waitForBuffer: true,
-      maxCacheSize: 1024 * 10, // 10MB
-    });
-
-    // Configure capabilities
-    await TrackPlayer.updateOptions({
-      // Configure which control center / notification controls are shown
-      capabilities: [
-        Capability.Play,
-        Capability.Pause,
-        Capability.SkipToNext,
-        Capability.SkipToPrevious,
-        Capability.SeekTo,
-      ],
-
-      // Capabilities that will show up when the notification is in the compact form on Android
-      compactCapabilities: [
-        Capability.Play,
-        Capability.Pause,
-      ],
-
-      // Configure behavior when app is killed
-      android: {
-        appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
-      },
-
-      // Configure notification
-      notificationCapabilities: [
-        Capability.Play,
-        Capability.Pause,
-      ],
-    });
-
-    console.log('TrackPlayer setup complete');
-  } catch (error) {
-    console.error('TrackPlayer setup error:', error);
-    throw error;
+    await TrackPlayer.getCurrentTrack();
+    initialized = true;
+  } catch {
+    await setupTrackPlayer();
   }
-};
+}
 
-// Reset player state
-export const resetPlayer = async (): Promise<void> => {
-  try {
-    await TrackPlayer.reset();
-  } catch (error) {
-    console.error('Reset player error:', error);
-  }
-};
-
-// Add track to player
-export const addTrack = async (track: {
+/** Track ekle & çal */
+export async function resetAndPlay(track: {
   id: string;
   url: string;
   title: string;
-  artist: string;
+  artist?: string;
   duration?: number;
-}): Promise<void> => {
-  try {
-    await TrackPlayer.add({
-      id: track.id,
-      url: track.url,
-      title: track.title,
-      artist: track.artist,
-      duration: track.duration,
-      // Optional: Add artwork if available
-      // artwork: track.artwork,
-    });
-  } catch (error) {
-    console.error('Add track error:', error);
-    throw error;
-  }
-};
+  artwork?: string;
+}) {
+  await ensureSetup();
+  await TrackPlayer.reset();
+  await TrackPlayer.add(track);
+  await TrackPlayer.play();
+}
 
-// Play current track
-export const playTrack = async (): Promise<void> => {
-  try {
-    await TrackPlayer.play();
-  } catch (error) {
-    console.error('Play track error:', error);
-    throw error;
-  }
-};
-
-// Pause current track
-export const pauseTrack = async (): Promise<void> => {
+export async function pauseSafe() {
   try {
     await TrackPlayer.pause();
-  } catch (error) {
-    console.error('Pause track error:', error);
-    throw error;
-  }
-};
+  } catch {}
+}
 
-// Seek to position
-export const seekToPosition = async (seconds: number): Promise<void> => {
+export async function seekSafe(seconds: number) {
   try {
     await TrackPlayer.seekTo(seconds);
-  } catch (error) {
-    console.error('Seek error:', error);
-    throw error;
-  }
-};
-
-// Get current position
-export const getCurrentPosition = async (): Promise<number> => {
-  try {
-    return await TrackPlayer.getPosition();
-  } catch (error) {
-    console.error('Get position error:', error);
-    return 0;
-  }
-};
-
-// Get track duration
-export const getTrackDuration = async (): Promise<number> => {
-  try {
-    return await TrackPlayer.getDuration();
-  } catch (error) {
-    console.error('Get duration error:', error);
-    return 0;
-  }
-};
-
-// Handle playback errors
-export const handlePlaybackError = (error: any) => {
-  console.error('Playback error:', error);
-  
-  // You can add error reporting here
-  // Example: report to crash analytics
-  // crashlytics().recordError(error);
-  
-  return {
-    message: error?.message || 'Unknown playback error',
-    code: error?.code || 'UNKNOWN_ERROR',
-  };
-};
-
-// Cleanup function - call when app is unmounting
-export const cleanupTrackPlayer = async (): Promise<void> => {
-  try {
-    await TrackPlayer.reset();
-  } catch (error) {
-    console.error('Cleanup error:', error);
-  }
-};
+  } catch {}
+}
