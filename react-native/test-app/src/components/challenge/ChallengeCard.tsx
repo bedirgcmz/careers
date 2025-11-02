@@ -9,6 +9,7 @@ import { router } from "expo-router";
 interface ChallengeCardProps {
   challenge: MusicChallenge;
   onPlay: (challenge: MusicChallenge) => void;
+  onViewDetails?: (challenge: MusicChallenge) => void;
   isCurrentTrack?: boolean;
   isPlaying?: boolean;
 }
@@ -16,6 +17,7 @@ interface ChallengeCardProps {
 export const ChallengeCard: React.FC<ChallengeCardProps> = ({
   challenge,
   onPlay,
+  onViewDetails,
   isCurrentTrack = false,
   isPlaying = false,
 }) => {
@@ -106,7 +108,8 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
         />
         <GlassButton
           title={"View Details"}
-          onPress={() => router.push("/(modals)/player")}
+          // onPress={() => router.push("/(modals)/player")}
+          onPress={() => onViewDetails?.(challenge)}
           variant={isCurrentTrack ? "primary" : "secondary"}
           visibility={challenge.completed ? "visible" : "hidden"}
           style={styles.playButton}

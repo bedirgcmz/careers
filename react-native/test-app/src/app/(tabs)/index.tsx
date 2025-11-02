@@ -1,12 +1,17 @@
 // Home screen - Challenge list (Expo Router)
-import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { router } from 'expo-router';
-import { ChallengeCard } from '../../components/challenge/ChallengeCard';
-import { useMusicPlayer } from '../../hooks/useMusicPlayer';
-import { useMusicStore, selectChallenges, selectCurrentTrack, selectIsPlaying } from '../../stores/musicStore';
-import { THEME } from '../../constants/theme';
-import type { MusicChallenge } from '../../types';
+import React from "react";
+import { View, Text, StyleSheet, FlatList } from "react-native";
+import { router } from "expo-router";
+import { ChallengeCard } from "../../components/challenge/ChallengeCard";
+import { useMusicPlayer } from "../../hooks/useMusicPlayer";
+import {
+  useMusicStore,
+  selectChallenges,
+  selectCurrentTrack,
+  selectIsPlaying,
+} from "../../stores/musicStore";
+import { THEME } from "../../constants/theme";
+import type { MusicChallenge } from "../../types";
 
 export default function HomeScreen() {
   const challenges = useMusicStore(selectChallenges);
@@ -18,16 +23,22 @@ export default function HomeScreen() {
     try {
       await play(challenge);
       // Navigate to player modal after starting playback
-      router.push('/(modals)/player');
+      router.push("/(modals)/player");
     } catch (error) {
-      console.error('Failed to play challenge:', error);
+      console.error("Failed to play challenge:", error);
     }
+  };
+  const handleViewDetails = (challenge: MusicChallenge) => {
+    useMusicStore.getState().setCurrentTrack(challenge);
+    router.push("/(modals)/player");
+    // router.push({ pathname: '/(modals)/player', params: { id: challenge.id } });
   };
 
   const renderChallenge = ({ item }: { item: MusicChallenge }) => (
     <ChallengeCard
       challenge={item}
       onPlay={handlePlayChallenge}
+      onViewDetails={handleViewDetails}
       isCurrentTrack={currentTrack?.id === item.id}
       isPlaying={isPlaying}
     />
@@ -59,15 +70,15 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: THEME.fonts.sizes.xxl,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: THEME.colors.text.primary,
     marginBottom: THEME.spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: THEME.fonts.sizes.sm,
     color: THEME.colors.text.secondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: THEME.spacing.lg,
   },
   listContainer: {
