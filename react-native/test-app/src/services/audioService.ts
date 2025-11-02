@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 import TrackPlayer, { Capability, AppKilledPlaybackBehavior } from "react-native-track-player";
-
+import { useMusicStore } from "../stores/musicStore";
 let initialized = false;
 
 /** Player'ı 1 kez kur (idempotent) */
@@ -68,6 +68,12 @@ export async function resetAndPlay(track: {
   await ensureSetup();
   await TrackPlayer.reset();
   await TrackPlayer.add(track);
+  try {
+    const pos = useMusicStore.getState().getPosition(track.id);
+    if (pos && pos > 0) {
+      await TrackPlayer.seekTo(pos);
+    }
+  } catch {}
   await TrackPlayer.play();
 }
 
@@ -83,6 +89,14 @@ export async function prepareTrack(track: {
   await ensureSetup();
   await TrackPlayer.reset();
   await TrackPlayer.add(track);
+  try {
+    const pos = useMusicStore.getState().getPosition(track.id);
+    if (pos && pos > 0) {
+      await TrackPlayer.seekTo(pos);
+    }
+  } catch (e) {
+    // sessiz geç: seek başarısız olsa bile çalmaya engel olmasın
+  }
 }
 
 export async function pauseSafe() {

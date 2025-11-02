@@ -1,17 +1,21 @@
 // Zustand store for music playback and challenges
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MusicChallenge } from '../types';
-import { SAMPLE_CHALLENGES } from '../constants/theme';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { MusicChallenge } from "../types";
+import { SAMPLE_CHALLENGES } from "../constants/theme";
 
 interface MusicStore {
   // State
   challenges: MusicChallenge[];
   currentTrack: MusicChallenge | null;
+  positions: Record<string, number>;
+  updatePosition: (challengeId: string, seconds: number) => void;
+  getPosition: (challengeId: string) => number;
+  clearPosition: (challengeId: string) => void;
   isPlaying: boolean;
   currentPosition: number;
-  
+
   // Actions
   loadChallenges: () => void;
   setCurrentTrack: (track: MusicChallenge) => void;
@@ -27,6 +31,23 @@ export const useMusicStore = create<MusicStore>()(
       // Initial state
       challenges: SAMPLE_CHALLENGES,
       currentTrack: null,
+      positions: {},
+      updatePosition: (id, seconds) =>
+        set((state) => ({
+          positions: { ...state.positions, [id]: seconds },
+        })),
+
+      getPosition: (id) => {
+        const s = get();
+        return s.positions[id] ?? 0;
+      },
+
+      clearPosition: (id) =>
+        set((state) => {
+          const next = { ...state.positions };
+          delete next[id];
+          return { positions: next };
+        }),
       isPlaying: false,
       currentPosition: 0,
 
@@ -53,11 +74,11 @@ export const useMusicStore = create<MusicStore>()(
         set((state) => ({
           challenges: state.challenges.map((challenge) =>
             challenge.id === challengeId
-              ? { 
-                  ...challenge, 
-                  completed: true, 
+              ? {
+                  ...challenge,
+                  completed: true,
                   progress: 100,
-                  completedAt: new Date().toISOString()
+                  completedAt: new Date().toISOString(),
                 }
               : challenge
           ),
@@ -73,11 +94,12 @@ export const useMusicStore = create<MusicStore>()(
       },
     }),
     {
-      name: 'music-store',
+      name: "music-store",
       storage: createJSONStorage(() => AsyncStorage),
       // Only persist challenges, not playback state
       partialize: (state) => ({
         challenges: state.challenges,
+        positions: state.positions,
       }),
     }
   )

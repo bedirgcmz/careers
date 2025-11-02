@@ -14,6 +14,7 @@ import type { MusicChallenge, UseMusicPlayerReturn } from "../types";
 export const useMusicPlayer = (): UseMusicPlayerReturn => {
   const playbackState = usePlaybackState();
   const progress = useProgress();
+  const updatePosition = useMusicStore((s) => s.updatePosition);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +42,9 @@ export const useMusicPlayer = (): UseMusicPlayerReturn => {
 
   // Progress + points
   useEffect(() => {
+    if (currentTrack && progress.position >= 0) {
+      updatePosition(currentTrack.id, progress.position);
+    }
     if (currentTrack && progress.duration > 0) {
       setCurrentPosition(progress.position);
       const pct = (progress.position / progress.duration) * 100;
