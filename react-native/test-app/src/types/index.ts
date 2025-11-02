@@ -9,7 +9,7 @@ export interface MusicChallenge {
   audioUrl: string;
   imageUrl?: string;
   description: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   completed: boolean;
   progress: number; // 0-100
   completedAt?: string;
@@ -32,6 +32,7 @@ export interface UseMusicPlayerReturn {
   seekTo: (seconds: number) => void;
   loading: boolean;
   error: string | null;
+  clearError: () => void;
 }
 
 export interface UsePointsCounterReturn {

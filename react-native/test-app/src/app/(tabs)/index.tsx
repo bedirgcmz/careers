@@ -3,7 +3,6 @@ import React from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
 import { router } from "expo-router";
 import { ChallengeCard } from "../../components/challenge/ChallengeCard";
-import { useMusicPlayer } from "../../hooks/useMusicPlayer";
 import {
   useMusicStore,
   selectChallenges,
@@ -12,26 +11,33 @@ import {
 } from "../../stores/musicStore";
 import { THEME } from "../../constants/theme";
 import type { MusicChallenge } from "../../types";
+import { resetAndPlay } from "../../services/audioService";
 
 export default function HomeScreen() {
   const challenges = useMusicStore(selectChallenges);
   const currentTrack = useMusicStore(selectCurrentTrack);
   const isPlaying = useMusicStore(selectIsPlaying);
-  const { play } = useMusicPlayer();
 
   const handlePlayChallenge = async (challenge: MusicChallenge) => {
     try {
-      await play(challenge);
-      // Navigate to player modal after starting playback
+      // Show selected track in UI
+      useMusicStore.getState().setCurrentTrack(challenge);
+      await resetAndPlay({
+        id: challenge.id,
+        url: challenge.audioUrl,
+        title: challenge.title,
+        artist: challenge.artist,
+        duration: challenge.duration,
+      });
       router.push("/(modals)/player");
     } catch (error) {
       console.error("Failed to play challenge:", error);
     }
   };
+
   const handleViewDetails = (challenge: MusicChallenge) => {
     useMusicStore.getState().setCurrentTrack(challenge);
-    router.push("/(modals)/player");
-    // router.push({ pathname: '/(modals)/player', params: { id: challenge.id } });
+    router.push({ pathname: "/(modals)/player", params: { id: challenge.id } });
   };
 
   const renderChallenge = ({ item }: { item: MusicChallenge }) => (

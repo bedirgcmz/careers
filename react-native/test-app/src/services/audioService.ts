@@ -71,6 +71,20 @@ export async function resetAndPlay(track: {
   await TrackPlayer.play();
 }
 
+// Parçayı kuyrukta hazırla (oynatma yok)
+export async function prepareTrack(track: {
+  id: string;
+  url: string;
+  title: string;
+  artist?: string;
+  duration?: number;
+  artwork?: string;
+}) {
+  await ensureSetup();
+  await TrackPlayer.reset();
+  await TrackPlayer.add(track);
+}
+
 export async function pauseSafe() {
   try {
     await TrackPlayer.pause();

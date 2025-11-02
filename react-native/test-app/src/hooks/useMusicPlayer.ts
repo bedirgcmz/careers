@@ -17,7 +17,7 @@ export const useMusicPlayer = (): UseMusicPlayerReturn => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const clearError = () => setError(null);
   const currentTrack = useMusicStore(selectCurrentTrack);
   const isPlaying = useMusicStore(selectIsPlaying);
   const setCurrentTrack = useMusicStore((s) => s.setCurrentTrack);
@@ -130,5 +130,6 @@ export const useMusicPlayer = (): UseMusicPlayerReturn => {
     resume,
     loading,
     error,
+    clearError,
   };
 };
