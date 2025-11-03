@@ -9,10 +9,10 @@ export default function RootLayout() {
   useEffect(() => {
     let mounted = true;
 
-    // Arka plan servisini kaydet (YOL çok önemli)
+    // Register background service (PATH is very important)
     TrackPlayer.registerPlaybackService(() => require("../services/playbackService"));
 
-    // Uygulama açılır açılmaz player'ı hazırla
+    // Prepare the player as soon as the application opens
     (async () => {
       try {
         await setupTrackPlayer();

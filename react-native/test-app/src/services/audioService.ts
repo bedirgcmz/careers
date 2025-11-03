@@ -3,19 +3,16 @@ import TrackPlayer, { Capability, AppKilledPlaybackBehavior } from "react-native
 import { useMusicStore } from "../stores/musicStore";
 let initialized = false;
 
-/** Player'ı 1 kez kur (idempotent) */
+/** Setup Player */
 export async function setupTrackPlayer() {
   if (initialized) return;
 
-  // Sade ve güvenilir kurulum
   await TrackPlayer.setupPlayer(
-    Platform.OS === "android"
-      ? { playBuffer: 1, minBuffer: 1 } // Android'de ek buffer ayarları zararsız
-      : undefined
+    Platform.OS === "android" ? { playBuffer: 1, minBuffer: 1 } : undefined
   );
 
   await TrackPlayer.updateOptions({
-    // iOS + Android ortak
+    // iOS + Android
     capabilities: [
       Capability.Play,
       Capability.Pause,
@@ -25,27 +22,19 @@ export async function setupTrackPlayer() {
       Capability.Stop,
     ],
     compactCapabilities: [Capability.Play, Capability.Pause, Capability.SeekTo],
-    // İstersen atlama aralıkları (opsiyonel)
-    // forwardJumpInterval: 10,
-    // backwardJumpInterval: 10,
 
-    // RNTP v4'te iOS sesi kategorisi burada verilmez.
-    // Onu app.json config plugin’i hallediyor.
-
-    // Android’e özel
+    // For Android
     android: {
       appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
-      // notificationIcon: 'mipmap/ic_launcher', // istersen
     },
 
-    // Olay gönderim aralığı (desteklenir)
     progressUpdateEventInterval: 1,
   });
 
   initialized = true;
 }
 
-/** Setup garanti: çağrıldığı yerde kurulum yoksa kur */
+/** Setup guarantee: if there is no setup where it is called, install it */
 export async function ensureSetup() {
   if (initialized) return;
   try {
@@ -56,7 +45,7 @@ export async function ensureSetup() {
   }
 }
 
-/** Track ekle & çal */
+/** Add & play tracks */
 export async function resetAndPlay(track: {
   id: string;
   url: string;
@@ -77,7 +66,7 @@ export async function resetAndPlay(track: {
   await TrackPlayer.play();
 }
 
-// Parçayı kuyrukta hazırla (oynatma yok)
+// Prepare track in queue (no play)
 export async function prepareTrack(track: {
   id: string;
   url: string;
@@ -95,7 +84,7 @@ export async function prepareTrack(track: {
       await TrackPlayer.seekTo(pos);
     }
   } catch (e) {
-    // sessiz geç: seek başarısız olsa bile çalmaya engel olmasın
+    // Go silent: Even if the seek fails, it should not prevent the player from playing.
   }
 }
 

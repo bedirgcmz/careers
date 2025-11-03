@@ -67,7 +67,7 @@ export const useMusicPlayer = (): UseMusicPlayerReturn => {
     addPoints,
   ]);
 
-  // Hata olayları
+  // Error events
   useTrackPlayerEvents([Event.PlaybackError], (event) => {
     if (event.type === Event.PlaybackError) {
       setError(`Playback error: ${event.message}`);
@@ -81,10 +81,9 @@ export const useMusicPlayer = (): UseMusicPlayerReturn => {
         setLoading(true);
         setError(null);
 
-        // Kurulum garanti
         await ensureSetup();
 
-        // Oynat
+        // Play
         await resetAndPlay({
           id: track.id,
           url: track.audioUrl,

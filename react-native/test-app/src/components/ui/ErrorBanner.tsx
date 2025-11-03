@@ -11,10 +11,7 @@ type Props = {
 
 export const ErrorBanner: React.FC<Props> = ({ message, onRetry, onClose }) => {
   return (
-    <GlassCard
-      gradientColors={THEME.glass.gradientColors.secondary} // hafif kırmızımsı/gri ton olabilir
-      style={styles.wrapper}
-    >
+    <GlassCard gradientColors={THEME.glass.gradientColors.secondary} style={styles.wrapper}>
       <View style={styles.row}>
         <Text style={styles.title}>Something went wrong</Text>
         {!!onClose && (

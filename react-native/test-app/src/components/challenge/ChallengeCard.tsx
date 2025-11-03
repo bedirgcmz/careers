@@ -108,7 +108,6 @@ export const ChallengeCard: React.FC<ChallengeCardProps> = ({
         />
         <GlassButton
           title={"View Details"}
-          // onPress={() => router.push("/(modals)/player")}
           onPress={() => onViewDetails?.(challenge)}
           variant={isCurrentTrack ? "primary" : "secondary"}
           visibility={challenge.completed ? "visible" : "hidden"}
